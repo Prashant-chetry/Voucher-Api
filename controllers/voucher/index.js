@@ -60,6 +60,8 @@ class VoucherController {
     try {
       const doc = await Vouchers.findOne({ email, redeemAmount: { $lte: redeemAmount } }).exec();
       if (!doc) return res.status(404).json({ success: false, message: 'voucher not found' });
+      const match = await bcrypt.compare(pin, doc.pin || '');
+      if (!match) return res.status(400).json({ success: false, message: 'invalid pin' });
       const curRedeemAmount = doc.redeemAmount - redeemAmount;
       doc.set({ redeemAmount: curRedeemAmount, status: !curRedeemAmount ? 'redeemed' : 'partially redeemed' });
       doc.activity.push({ amount: redeemAmount });
